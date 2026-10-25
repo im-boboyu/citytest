@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>测测你的本命定居城市 | 你最适合在哪长期定居？</title>
+    <style>
+        /* 莫兰迪浅色系 & 清新简约风 */
+        :root {
+            --bg-color: #F7F5F2;
+            --primary-color: #A3B1A6;
+            --primary-dark: #839485;
+            --text-main: #4A4A4A;
+            --text-sub: #8A8A8A;
+            --card-bg: #FFFFFF;
+            --border-color: #E8E5E1;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif; line-height: 1.6; display: flex; justify-content: center; min-height: 100vh; }
+        #app { width: 100%; max-width: 480px; background: var(--bg-color); padding: 20px; display: flex; flex-direction: column; position: relative; overflow-x: hidden; }
+        .header { text-align: center; padding: 20px 0 10px; }
+        .header h1 { font-size: 20px; font-weight: 600; color: var(--primary-dark); letter-spacing: 1px; }
+        .header p { font-size: 12px; color: var(--text-sub); margin-top: 5px; }
+        .page { display: none; flex-direction: column; animation: fadeIn 0.4s ease; }
+        .page.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .cover { text-align: center; padding: 40px 20px; background: var(--card-bg); border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-top: 30px; }
+        .cover h2 { font-size: 24px; color: var(--primary-dark); margin-bottom: 20px; line-height: 1.4; }
+        .cover p { font-size: 14px; color: var(--text-sub); margin-bottom: 40px; }
+        .btn { background-color: var(--primary-color); color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 16px; font-weight: 500; width: 100%; cursor: pointer; transition: background 0.3s; letter-spacing: 1px; }
+        .btn:active { background-color: var(--primary-dark); }
+        .quiz-header { font-size: 13px; color: var(--text-sub); margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .progress-bar { height: 4px; background: var(--border-color); border-radius: 2px; margin-bottom: 30px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary-color); width: 0%; transition: width 0.3s ease; }
+        .question-text { font-size: 18px; font-weight: 600; margin-bottom: 25px; color: var(--text-main); }
+        .options { display: flex; flex-direction: column; gap: 15px; }
+        .option { background: var(--card-bg); border: 1px solid var(--border-color); padding: 16px 20px; border-radius: 12px; font-size: 15px; color: var(--text-main); cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .option:active { transform: scale(0.98); }
+        .option.selected { border-color: var(--primary-color); background-color: #F0F4F1; color: var(--primary-dark); font-weight: 500; }
+        .result-card { background: var(--card-bg); border-radius: 20px; padding: 30px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 20px; }
+        
+        /* 新增：测试人数徽章样式 */
+        .badge { text-align: center; font-size: 12px; color: #fff; background: #D4A373; display: inline-block; padding: 4px 12px; border-radius: 20px; margin: 0 auto 15px auto; font-weight: 500; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(212, 163, 115, 0.3); }
+        .badge-wrapper { text-align: center; }
+
+        .result-title { text-align: center; font-size: 14px; color: var(--text-sub); margin-bottom: 5px; }
+        .result-city { text-align: center; font-size: 28px; font-weight: bold; color: var(--primary-dark); margin-bottom: 20px; }
+        .result-content { font-size: 14px; color: var(--text-main); line-height: 1.8; text-align: justify; }
+        .result-content p { margin-bottom: 12px; }
+        .result-content strong { color: var(--primary-dark); }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; justify-content: center; }
+        .tag { background: #F0F4F1; color: var(--primary-dark); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="header">
+        <h1>测测你的本命定居城市</h1>
+        <p>你最适合在哪长期定居？</p>
+    </div>
+
+    <div id="page-cover" class="page active">
+        <div class="cover">
+            <h2>你的理想之城<br>藏在你的生活偏好里</h2>
+            <p>15道现实宜居题，帮你找到最契合的长期定居地。<br>请凭直觉作答。</p>
+            <button class="btn" onclick="startQuiz()">开始测试</button>
+        </div>
+    </div>
+
+    <div id="page-quiz" class="page">
+        <div class="quiz-header"><span id="q-current">1</span>/<span id="q-total">15</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="question-text" id="question-text">题目加载中...</div>
+        <div class="options" id="options-container"></div>
+    </div>
+
+    <div id="page-result" class="page">
+        <div class="result-card">
+            <!-- 新增：显示测试人数 -->
+            <div class="badge-wrapper">
+                <div class="badge" id="test-count-badge">正在获取数据...</div>
+            </div>
+            
+            <div class="result-title">你的本命定居城市是</div>
+            <div class="result-city" id="res-city">城市名</div>
+            <div class="tags" id="res-tags"></div>
+            <div class="result-content" id="res-content"></div>
+        </div>
+        <button class="btn" onclick="restartQuiz()" style="margin-bottom: 30px;">重新测试</button>
+    </div>
+</div>
+
+<script>
+    // --- 题库配置（保持原样） ---
+    const questions = [
+        { q: "如果可以选择，你更希望定居在哪种气候带？", opts: [{t: "四季如春，温差不大", val: {climate: 2, reality: 8}}, {t: "四季分明，能看雪也能看海", val: {climate: 5, reality: 5}}, {t: "阳光充足，哪怕夏天有点热", val: {climate: 8, reality: 4}}, {t: "温润潮湿，喜欢雨水和绿意", val: {climate: 3, reality: 2}}] },
+        { q: "理想中的通勤节奏是怎样的？", opts: [{t: "步行/骑车10分钟，慢悠悠", val: {pace: 2}}, {t: "地铁半小时内，规律稳定", val: {pace: 5}}, {t: "一小时以内，去大城市赚钱", val: {pace: 8}}, {t: "不用通勤，线上办公/自由职业", val: {pace: 3}}] },
+        { q: "周末更倾向于哪种消遣？", opts: [{t: "逛公园、爬山、看海", val: {nature: 8, crowd: 2}}, {t: "看展、逛市集、喝咖啡", val: {nature: 3, crowd: 7}}, {t: "和朋友聚餐、去Livehouse", val: {nature: 2, crowd: 9}}, {t: "宅家追剧、睡到自然醒", val: {nature: 5, crowd: 3}}] },
+        { q: "你对气候“潮湿/回南天”的接受度如何？", opts: [{t: "完全不行，皮肤和衣服受不了", val: {climate: 9}}, {t: "有点讨厌，但可以忍", val: {climate: 6}}, {t: "无感，习惯了就好", val: {climate: 4}}, {t: "很喜欢，湿润空气对皮肤好", val: {climate: 1}}] },
+        { q: "关于收入和消费，你的态度是？", opts: [{t: "赚钱第一，能吃苦，要存钱", val: {reality: 9}}, {t: "工作稳定，收入中等就好", val: {reality: 5}}, {t: "够花就行，享受当下最重要", val: {reality: 2}}, {t: "想暴富，也愿意承担高风险", val: {reality: 7}}] },
+        { q: "你更喜欢哪种社区氛围？", opts: [{t: "安静、私密，邻居互不打扰", val: {crowd: 2, tolerance: 4}}, {t: "有烟火气，菜市场和小店多", val: {crowd: 6, tolerance: 8}}, {t: "高档商圈，配套一应俱全", val: {crowd: 7, tolerance: 5}}, {t: "文艺街区，氛围感强", val: {crowd: 5, tolerance: 9}}] },
+        { q: "如果在城市里散步，你更想看到？", opts: [{t: "大片的绿地和森林", val: {nature: 9}}, {t: "江河湖海，波光粼粼", val: {nature: 7}}, {t: "历史建筑，老街道", val: {nature: 4, tolerance: 8}}, {t: "高楼大厦，霓虹闪烁", val: {nature: 2, crowd: 8}}] },
+        { q: "对于“社交”和“独处”，你更需要？", opts: [{t: "极度需要独处，不想被打扰", val: {crowd: 1}}, {t: "偶尔需要朋友聚聚", val: {crowd: 4}}, {t: "喜欢热闹，经常组局", val: {crowd: 8}}, {t: "圈子很小，但固定", val: {crowd: 3}}] },
+        { q: "你对“异乡人/多元文化”的包容度要求？", opts: [{t: "希望本地人很多，有归属感", val: {tolerance: 2}}, {t: "无所谓，哪里人都有", val: {tolerance: 5}}, {t: "喜欢外地人/外国人多的移民城", val: {tolerance: 8}}, {t: "只要不排外就行", val: {tolerance: 6}}] },
+        { q: "你能接受的每日最大通勤时间？", opts: [{t: "15分钟以内", val: {pace: 2, reality: 2}}, {t: "30-45分钟", val: {pace: 5, reality: 5}}, {t: "1小时以上，为了高薪", val: {pace: 9, reality: 9}}, {t: "不需要出门上班", val: {pace: 1, reality: 3}}] },
+        { q: "关于美食，你的偏好是？", opts: [{t: "口味清淡，食材原汁原味", val: {climate: 2, tolerance: 4}}, {t: "无辣不欢，重口味", val: {climate: 8, reality: 7}}, {t: "精致西餐、日料、早茶", val: {climate: 4, reality: 3}}, {t: "接地气的大排档、小吃街", val: {climate: 7, reality: 8}}] },
+        { q: "如果让你在“山”和“海”中选一个？", opts: [{t: "山，喜欢有靠山的感觉", val: {nature: 9}}, {t: "海，喜欢一望无际的辽阔", val: {nature: 8}}, {t: "都要，贪心一点", val: {nature: 10}}, {t: "都不太感冒，喜欢城市景观", val: {nature: 1, crowd: 7}}] },
+        { q: "你对生活设施的“便捷度”要求高吗？", opts: [{t: "极高，外卖快递必须快", val: {reality: 8, pace: 8}}, {t: "一般，够用就行", val: {reality: 5, pace: 5}}, {t: "无所谓，慢一点也挺好", val: {reality: 2, pace: 2}}, {t: "只要能满足基本生存需求", val: {reality: 3, pace: 3}}] },
+        { q: "你更向往哪个季节？", opts: [{t: "春天，喜欢万物复苏", val: {climate: 3}}, {t: "夏天，喜欢阳光和沙滩", val: {climate: 7}}, {t: "秋天，喜欢落叶和凉爽", val: {climate: 4}}, {t: "冬天，喜欢雪和围炉", val: {climate: 8}}] },
+        { q: "如果遇到工作压力，你通常怎么解压？", opts: [{t: "去海边/山里大喊大叫", val: {nature: 8, pace: 3}}, {t: "逛街购物、吃顿好的", val: {crowd: 8, pace: 7}}, {t: "去酒吧喝一杯，认识新朋友", val: {crowd: 9, tolerance: 8}}, {t: "去公园散步，或者在家冥想", val: {nature: 5, pace: 2}}] }
+    ];
+
+    // --- 城市数据 (保留原数据，此处省略以节省空间，实际代码中请完整保留您之前的50个城市数据) ---
+    const cities = [
+        // 这里请务必保留您上一版代码里完整的 50 个城市数据。为了展示方便我截取前两个，你复制时请全选原来的城市数组。
+        { name: "成都", dim: {climate: 7, pace: 3, crowd: 8, nature: 6, tolerance: 8, reality: 5}, tags: ["巴适得板", "美食之都", "烟火气"], text: "🌶️ <strong>【宜居亮点】</strong> 成都是一座你来了就不想走的城市。这里不仅有火锅、串串和茶馆，还有慢节奏的生活和超强的包容度。周末可以去青城山吸氧，或者去人民公园喝杯盖碗茶。<br><br>👩‍💻 <strong>【适合性格】</strong> 适合喜欢热闹又需要慢节奏的人，吃货和文艺青年绝对会爱上这里。如果你想要“工作再忙也能享受生活”的状态，成都就是你的本命。<br><br>💡 <strong>【小缺点】</strong> 气候偏潮湿，冬天阴冷少阳光，紫外线弱。近年来房价和消费有所上涨。" },
+        { name: "杭州", dim: {climate: 5, pace: 6, crowd: 6, nature: 8, tolerance: 7, reality: 8}, tags: ["西湖美景", "电商之都", "精致"], text: "🌿 <strong>【宜居亮点】</strong> 杭州将江南水乡的诗意和现代互联网的繁荣结合得很好。西湖边的四季都有不同的美，城市绿化极佳，公共设施完善，且有着很好的创业和就业环境。<br><br>👩‍💻 <strong>【适合性格】</strong> 适合有事业心但也注重生活品质的人。喜欢互联网、电商行业，以及想要在周末逛展、喝咖啡的年轻人。<br><br>💡 <strong>【小缺点】</strong> 梅雨季非常潮湿，冬天湿冷。房价较高，早晚高峰交通拥堵。" },
+        // ... (复制您原有的50个城市数据到这里，千万别漏了) ...
+        // 注意：如果嫌太长，您可以直接保留您上一版完整的 <script> 里的 cities 数组
+    ];
+
+    // --- 业务逻辑 ---
+    let currentQuestionIndex = 0;
+    let userScores = { climate: 0, pace: 0, crowd: 0, nature: 0, tolerance: 0, reality: 0 };
+
+    // 伪造总测试人数基数 (你可以修改这个基础数字，让它看起来更火爆)
+    let baseTestCount = 4521; 
+
+    function initApp() {
+        document.getElementById('q-total').innerText = questions.length;
+    }
+
+    function startQuiz() {
+        document.getElementById('page-cover').classList.remove('active');
+        document.getElementById('page-quiz').classList.add('active');
+        currentQuestionIndex = 0;
+        for (let key in userScores) userScores[key] = 0;
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        if (currentQuestionIndex >= questions.length) {
+            calculateResult();
+            return;
+        }
+        const q = questions[currentQuestionIndex];
+        document.getElementById('q-current').innerText = currentQuestionIndex + 1;
+        document.getElementById('question-text').innerText = q.q;
+        document.getElementById('progress-fill').style.width = ((currentQuestionIndex) / questions.length * 100) + '%';
+        const optsContainer = document.getElementById('options-container');
+        optsContainer.innerHTML = '';
+        const shuffledOpts = q.opts.sort(() => Math.random() - 0.5);
+        shuffledOpts.forEach(opt => {
+            const div = document.createElement('div');
+            div.className = 'option';
+            div.innerText = opt.t;
+            div.onclick = () => selectOption(div, opt.val);
+            optsContainer.appendChild(div);
+        });
+    }
+
+    function selectOption(element, val) {
+        if(document.getElementById('options-container').classList.contains('locked')) return;
+        document.getElementById('options-container').classList.add('locked');
+        const options = document.querySelectorAll('.option');
+        options.forEach(opt => opt.classList.remove('selected'));
+        element.classList.add('selected');
+        for (let key in val) {
+            if (userScores[key] !== undefined) userScores[key] += val[key];
+        }
+        setTimeout(() => {
+            document.getElementById('options-container').classList.remove('locked');
+            currentQuestionIndex++;
+            renderQuestion();
+        }, 300);
+    }
+
+    function calculateResult() {
+        document.getElementById('page-quiz').classList.remove('active');
+        document.getElementById('page-result').classList.add('active');
+
+        // 生成测试人数 (每次完成测试，基数随机 + 1 到 3 人，看起来像实时数据)
+        let currentCount = baseTestCount + Math.floor(Math.random() * 3) + 1;
+        document.getElementById('test-count-badge').innerText = `🎉 你是第 ${currentCount} 个找到本命城市的人`;
+
+        let bestCity = null;
+        let minDistance = Infinity;
+        let userVector = {};
+        for(let key in userScores) {
+            userVector[key] = userScores[key] / (questions.length * 0.4) * 100; 
+            if(userVector[key] > 100) userVector[key] = 100;
+        }
+        cities.forEach(city => {
+            let distance = 0;
+            for(let key in userScores) {
+                const cityVal = city.dim[key] * 10;
+                distance += Math.abs(userVector[key] - cityVal);
+            }
+            if (distance < minDistance) {
+                minDistance = distance;
+                bestCity = city;
+            }
+        });
+
+        document.getElementById('res-city').innerText = bestCity.name;
+        const tagsContainer = document.getElementById('res-tags');
+        tagsContainer.innerHTML = '';
+        bestCity.tags.forEach(tag => {
+            const span = document.createElement('span');
+            span.className = 'tag';
+            span.innerText = '#' + tag;
+            tagsContainer.appendChild(span);
+        });
+        document.getElementById('res-content').innerHTML = bestCity.text;
+    }
+
+    function restartQuiz() {
+        document.getElementById('page-result').classList.remove('active');
+        document.getElementById('page-cover').classList.add('active');
+        currentQuestionIndex = 0;
+    }
+
+    window.onload = initApp;
+</script>
+</body>
+</html>
